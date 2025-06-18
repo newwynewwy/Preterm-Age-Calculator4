@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Preterm Age Calculator by OtterDoctor</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d6efd">
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: auto;
+      padding: 1em;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+      text-align: left;
+    }
+    input {
+      width: 100%;
+      padding: 0.5em;
+      margin-top: 0.25em;
+    }
+    button {
+      margin-top: 1.5em;
+      padding: 0.5em 1em;
+      font-size: 1em;
+    }
+    #result {
+      margin-top: 1.5em;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+    .warning {
+      color: red;
+    }
+  </style>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</head>
+<body>
+  <h2>Preterm Age Calculator by OtterDoctor</h2>
+
+  <label>Date of Birth:
+    <input type="date" id="birthDate">
+  </label>
+
+  <label>GA at Birth (Weeks):
+    <input type="number" id="gaWeeks" min="1" max="39" required>
+  </label>
+
+  <label>GA at Birth (Days):
+    <input type="number" id="gaDays" min="0" max="6" required>
+  </label>
+
+  <label>Current Date:
+    <input type="date" id="currentDate">
+  </label>
+
+  <button onclick="calculatePCA()">Calculate</button>
+
+  <div id="result"></div>
+
+  <script>
+    function calculatePCA() {
+      const birthDate = new Date(document.getElementById("birthDate").value);
+      const gaWeeks = parseInt(document.getElementById("gaWeeks").value);
+      const gaDays = parseInt(document.getElementById("gaDays").value);
+      const currentDate = new Date(document.getElementById("currentDate").value);
+
+      if (!birthDate || !currentDate || isNaN(birthDate) || isNaN(currentDate) ||
+          isNaN(gaWeeks) || isNaN(gaDays)) {
+        document.getElementById("result").textContent = "Please fill in all fields correctly.";
+        return;
+      }
+
+      const ageInDays = Math.floor((currentDate - birthDate) / (1000 * 60 * 60 * 24));
+      const totalGADays = (gaWeeks * 7) + gaDays + ageInDays;
+      const pcaWeeks = Math.floor(totalGADays / 7);
+      const pcaDays = totalGADays % 7;
+
+      const correctedBirthDate = new Date(birthDate);
+      correctedBirthDate.setDate(correctedBirthDate.getDate() + (40 * 7 - (gaWeeks * 7 + gaDays)));
+
+      let correctedYears = currentDate.getFullYear() - correctedBirthDate.getFullYear();
+      let correctedMonths = currentDate.getMonth() - correctedBirthDate.getMonth();
+      let correctedDays = currentDate.getDate() - correctedBirthDate.getDate();
+
+      if (correctedDays < 0) {
+        correctedMonths--;
+        correctedDays += new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
+      }
+      if (correctedMonths < 0) {
+        correctedYears--;
+        correctedMonths += 12;
+      }
+
+      let dobYears = currentDate.getFullYear() - birthDate.getFullYear();
+      let dobMonths = currentDate.getMonth() - birthDate.getMonth();
+      let dobDays = currentDate.getDate() - birthDate.getDate();
+
+      if (dobDays < 0) {
+        dobMonths--;
+        dobDays += new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
+      }
+      if (dobMonths < 0) {
+        dobYears--;
+        dobMonths += 12;
+      }
+
+      const chronoText = `Chronological Age: ${dobYears} years ${dobMonths} months ${dobDays} days`;
+      let pcaText = `PCA (Post-conceptional Age): ${pcaWeeks} weeks ${pcaDays} days`;
+      if (pcaWeeks < 37 || pcaWeeks > 40) {
+        pcaText = `<span class="warning">${pcaText}${pcaWeeks > 40 ? ' - Consider using Corrected Age' : ''}</span>`;
+      }
+      const correctedText = `Corrected Age: ${correctedYears} years ${correctedMonths} months ${correctedDays} days`;
+
+      document.getElementById("result").innerHTML = `${chronoText}<br>${pcaText}<br>${correctedText}`;
+    }
+  </script>
+</body>
+</html>
